@@ -1,0 +1,219 @@
+definitions:
+  auth.ErrorResponse:
+    properties:
+      "200":
+        type: string
+      "400":
+        type: string
+      "500":
+        type: string
+    type: object
+  auth.LoginResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  auth.TokenResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  auth.User:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  service.Address:
+    properties:
+      city:
+        type: string
+      geo_lat:
+        type: string
+      geo_lon:
+        type: string
+      house:
+        type: string
+      street:
+        type: string
+    type: object
+  service.GeocodeRequest:
+    properties:
+      lat:
+        type: number
+      lng:
+        type: number
+    type: object
+  service.RequestAddressSearch:
+    properties:
+      query:
+        type: string
+    type: object
+  service.ResponseAddress:
+    properties:
+      suggestions:
+        items:
+          properties:
+            data:
+              $ref: '#/definitions/service.Address'
+          type: object
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Этот эндпоинт позволяет получить адрес по наименованию
+  title: Address API
+  version: "1.0"
+paths:
+  /api/address/geocode:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows you to get geo coordinates by latitude and
+        longitude.
+      parameters:
+      - description: Geographic coordinates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.GeocodeRequest'
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное выполнение
+          schema:
+            $ref: '#/definitions/service.ResponseAddress'
+        "400":
+          description: Ошибка запроса
+          schema:
+            type: string
+        "500":
+          description: Ошибка подключения к серверу
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get Geo Coordinates by Latitude and Longitude
+      tags:
+      - geo
+  /api/address/search:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows you to get geo coordinates by address.
+      parameters:
+      - description: Address search query
+        in: body
+        name: address
+        required: true
+        schema:
+          $ref: '#/definitions/service.RequestAddressSearch'
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное выполнение
+          schema:
+            $ref: '#/definitions/service.ResponseAddress'
+        "400":
+          description: Ошибка запроса
+          schema:
+            type: string
+        "500":
+          description: Ошибка подключения к серверу
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get Geo Coordinates by Address
+      tags:
+      - geo
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows a user to log in with their username and password.
+      parameters:
+      - description: User login details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Login a user
+      tags:
+      - users
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows you to register a new user with a username
+        and password.
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            $ref: '#/definitions/auth.TokenResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
