@@ -1,6 +1,13 @@
 version: '3'
 
 services:
+  app:
+    build: ./proxy
+    ports:
+      - "6060:6060"
+    networks:
+      - mylocal
+
   server:
     image: klakegg/hugo:0.101.0-ext-alpine
     container_name: hugo
@@ -11,12 +18,8 @@ services:
     ports:
       - "1313:1313"
     networks:
-        - mylocal
-  app:
-    build: ./proxy
-    container_name: proxy
-    networks:
-        - mylocal
+      - mylocal
+
   swagger:
     image: swaggerapi/swagger-ui
     environment:
@@ -25,6 +28,7 @@ services:
       - ./proxy/docs/swagger.yaml:/swagger.yaml
     networks:
       - mylocal
+
 
   nginx:
     image: nginx:alpine
@@ -38,10 +42,8 @@ services:
       - app
       - swagger
     networks:
-      - mylocal 
+      - mylocal
+
 networks:
   mylocal:
     driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1450
-

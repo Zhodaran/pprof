@@ -119,11 +119,47 @@ func main() {
 		},
 	}
 
-	go srv.Serve()
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		// 1. Проверка geoService
+		if geoService == nil {
+			log.Println("geoService is nil")
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, "geoService is nil")
+			return
+		}
+
+		// 3.  Более сложная проверка (пример: проверка кэша)
+		if cache == nil {
+			log.Println("Cache is nil")
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, "Cache is nil")
+			return
+		}
+
+		//Попытка записи и чтения из кэша
+		testKey := "healthcheck_test_key"
+		testValue := "healthcheck_test_value"
+		cache.Set(testKey, testValue)
+		_, found := cache.Get(testKey)
+		if !found {
+			log.Println("Cache test failed")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			fmt.Fprintln(w, "Cache test failed")
+			return
+		}
+
+		// Все проверки прошли успешно
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	})
+	// --- Конец Health Check Endpoint ---
 
 	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
+		log.Println("Starting pprof server on :6060")
+		http.ListenAndServe("0.0.0.0:6060", nil)
 	}()
+
+	go srv.Serve()
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -232,39 +268,16 @@ func router(resp controller.Responder, geoService service.GeoProvider, cache *Ca
 	r.Post("/api/login", auth.Login)
 
 	// Используем обработчики с middleware
-	r.With(TokenAuthMiddleware(resp)).Post("/api/address/geocode", geocodeHandler(resp, geoService, cache))
-	r.With(TokenAuthMiddleware(resp)).Post("/api/address/search", searchHandler(resp, geoService, cache))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/", http.HandlerFunc(pprof.Index))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
-
-	// @Summary Профилирование CPU
-	// @Description Получить профиль CPU
-	// @Tags pprof
-	// @Produce json
-	// @Success 200 {object} string
-	// @Router /mycustompath/pprof/profile [get]
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/profile", http.HandlerFunc(pprof.Profile))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/symbol", http.HandlerFunc(pprof.Symbol))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/trace", http.HandlerFunc(pprof.Trace))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/allocs", http.HandlerFunc(pprof.Handler("allocs").ServeHTTP))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/block", http.HandlerFunc(pprof.Handler("block").ServeHTTP))
-
-	// @Summary Профилирование горутин
-	// @Description Получить профиль горутин
-	// @Tags pprof
-	// @Produce json
-	// @Success 200 {object} string
-	// @Router /mycustompath/pprof/goroutine [get]
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/goroutine", http.HandlerFunc(pprof.Handler("goroutine").ServeHTTP))
-
-	// @Summary Профилирование памяти
-	// @Description Получить профиль памяти
-	// @Tags pprof
-	// @Produce json
-	// @Success 200 {object} string
-	// @Router /mycustompath/pprof/heap [get]
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/heap", http.HandlerFunc(pprof.Handler("heap").ServeHTTP))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/threadcreate", http.HandlerFunc(pprof.Handler("threadcreate").ServeHTTP))
-	r.With(TokenAuthMiddleware(resp)).Get("/mycustompath/pprof/mutex", http.HandlerFunc(pprof.Handler("mutex").ServeHTTP))
+	r.Mount("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	r.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	r.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	r.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+	r.Handle("/debug/pprof/allocs", http.HandlerFunc(pprof.Handler("allocs").ServeHTTP))
+	r.Handle("/debug/pprof/block", http.HandlerFunc(pprof.Handler("block").ServeHTTP))
+	r.Handle("/debug/pprof/goroutine", http.HandlerFunc(pprof.Handler("goroutine").ServeHTTP))
+	r.Handle("/debug/pprof/heap", http.HandlerFunc(pprof.Handler("heap").ServeHTTP))
+	r.Handle("/debug/pprof/threadcreate", http.HandlerFunc(pprof.Handler("threadcreate").ServeHTTP))
+	r.Handle("/debug/pprof/mutex", http.HandlerFunc(pprof.Handler("mutex").ServeHTTP))
 	return r
 }
