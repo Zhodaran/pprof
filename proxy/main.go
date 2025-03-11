@@ -8,10 +8,12 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"net/http/pprof"
+	NetPprof "net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
+	"runtime/pprof"
+	"runtime/trace"
 	"strings"
 	"sync"
 	"syscall"
@@ -105,6 +107,30 @@ func (c *Cache) Remove(key string) {
 func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
+
+	cpuProfileFile, err := os.Create("cpu_profile.prof")
+	if err != nil {
+		log.Fatal("Не удалось создать файл для CPU-профиля:", err)
+	}
+	defer cpuProfileFile.Close()
+
+	// Начинаем профилирование CPU
+	if err := pprof.StartCPUProfile(cpuProfileFile); err != nil {
+		log.Fatal("Не удалось начать CPU-профилирование:", err)
+	}
+	defer pprof.StopCPUProfile()
+
+	traceFile, err := os.Create("trace.out")
+	if err != nil {
+		log.Fatal("Не удалось создать файл для трассировки:", err)
+	}
+	defer traceFile.Close()
+
+	// Начинаем трассировку
+	if err := trace.Start(traceFile); err != nil {
+		log.Fatal("Не удалось начать трассировку:", err)
+	}
+	defer trace.Stop()
 
 	geoService := service.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d") // Создаем новый экземпляр GeoService
 	resp := controller.NewResponder(logger)
@@ -268,16 +294,16 @@ func router(resp controller.Responder, geoService service.GeoProvider, cache *Ca
 	r.Post("/api/login", auth.Login)
 
 	// Используем обработчики с middleware
-	r.Mount("/debug/pprof/", http.HandlerFunc(pprof.Index))
-	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
-	r.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
-	r.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
-	r.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
-	r.Handle("/debug/pprof/allocs", http.HandlerFunc(pprof.Handler("allocs").ServeHTTP))
-	r.Handle("/debug/pprof/block", http.HandlerFunc(pprof.Handler("block").ServeHTTP))
-	r.Handle("/debug/pprof/goroutine", http.HandlerFunc(pprof.Handler("goroutine").ServeHTTP))
-	r.Handle("/debug/pprof/heap", http.HandlerFunc(pprof.Handler("heap").ServeHTTP))
-	r.Handle("/debug/pprof/threadcreate", http.HandlerFunc(pprof.Handler("threadcreate").ServeHTTP))
-	r.Handle("/debug/pprof/mutex", http.HandlerFunc(pprof.Handler("mutex").ServeHTTP))
+	r.Mount("/debug/pprof/", http.HandlerFunc(NetPprof.Index))
+	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(NetPprof.Cmdline))
+	r.Handle("/debug/pprof/profile", http.HandlerFunc(NetPprof.Profile))
+	r.Handle("/debug/pprof/symbol", http.HandlerFunc(NetPprof.Symbol))
+	r.Handle("/debug/pprof/trace", http.HandlerFunc(NetPprof.Trace))
+	r.Handle("/debug/pprof/allocs", http.HandlerFunc(NetPprof.Handler("allocs").ServeHTTP))
+	r.Handle("/debug/pprof/block", http.HandlerFunc(NetPprof.Handler("block").ServeHTTP))
+	r.Handle("/debug/pprof/goroutine", http.HandlerFunc(NetPprof.Handler("goroutine").ServeHTTP))
+	r.Handle("/debug/pprof/heap", http.HandlerFunc(NetPprof.Handler("heap").ServeHTTP))
+	r.Handle("/debug/pprof/threadcreate", http.HandlerFunc(NetPprof.Handler("threadcreate").ServeHTTP))
+	r.Handle("/debug/pprof/mutex", http.HandlerFunc(NetPprof.Handler("mutex").ServeHTTP))
 	return r
 }
