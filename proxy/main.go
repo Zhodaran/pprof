@@ -108,7 +108,7 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
-	cpuProfileFile, err := os.Create("cpu_profile.prof")
+	cpuProfileFile, err := os.Create("profile.prof")
 	if err != nil {
 		log.Fatal("Не удалось создать файл для CPU-профиля:", err)
 	}
