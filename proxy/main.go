@@ -178,14 +178,24 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
 	})
+
 	// --- Конец Health Check Endpoint ---
 
-	go func() {
-		log.Println("Starting pprof server on :6060")
-		http.ListenAndServe("0.0.0.0:6060", nil)
-	}()
+	http.HandleFunc("/geocode", func(w http.ResponseWriter, r *http.Request) {
+		// Имитация работы
+		time.Sleep(100 * time.Millisecond)
+		w.Write([]byte("Geocode response"))
+	})
 
 	go srv.Serve()
+	for i := 0; i < 100; i++ {
+		_, err := http.Get("http://localhost:8080/geocode")
+		if err != nil {
+			log.Println("Ошибка при запросе:", err)
+		}
+		time.Sleep(10 * time.Millisecond) // Небольшая задержка между запросами
+	}
+	time.Sleep(2 * time.Second)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -305,5 +315,9 @@ func router(resp controller.Responder, geoService service.GeoProvider, cache *Ca
 	r.Handle("/debug/pprof/heap", http.HandlerFunc(NetPprof.Handler("heap").ServeHTTP))
 	r.Handle("/debug/pprof/threadcreate", http.HandlerFunc(NetPprof.Handler("threadcreate").ServeHTTP))
 	r.Handle("/debug/pprof/mutex", http.HandlerFunc(NetPprof.Handler("mutex").ServeHTTP))
+	log.Println("Starting server on :8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 	return r
 }
