@@ -135,6 +135,7 @@ func main() {
 	geoService := service.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d") // Создаем новый экземпляр GeoService
 	resp := controller.NewResponder(logger)
 	cache := NewCache(5 * time.Minute) // Создаем кэш с TTL 5 минут
+
 	r := router(resp, geoService, cache)
 	srv := &Server{
 		Server: http.Server{
@@ -145,6 +146,12 @@ func main() {
 		},
 	}
 
+	go func() {
+		err := http.ListenAndServe(":6060", nil) // исправлено на ":6060"
+		if err != nil {
+			panic(err) // обработка ошибки
+		}
+	}()
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// 1. Проверка geoService
 		if geoService == nil {
@@ -302,8 +309,9 @@ func router(resp controller.Responder, geoService service.GeoProvider, cache *Ca
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 	r.Post("/api/register", auth.Register)
 	r.Post("/api/login", auth.Login)
+	r.With(TokenAuthMiddleware(resp)).Post("/api/address/geocode", geocodeHandler(resp, geoService, cache))
+	r.With(TokenAuthMiddleware(resp)).Post("/api/address/search", searchHandler(resp, geoService, cache))
 
-	// Используем обработчики с middleware
 	r.Mount("/debug/pprof/", http.HandlerFunc(NetPprof.Index))
 	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(NetPprof.Cmdline))
 	r.Handle("/debug/pprof/profile", http.HandlerFunc(NetPprof.Profile))
@@ -315,9 +323,6 @@ func router(resp controller.Responder, geoService service.GeoProvider, cache *Ca
 	r.Handle("/debug/pprof/heap", http.HandlerFunc(NetPprof.Handler("heap").ServeHTTP))
 	r.Handle("/debug/pprof/threadcreate", http.HandlerFunc(NetPprof.Handler("threadcreate").ServeHTTP))
 	r.Handle("/debug/pprof/mutex", http.HandlerFunc(NetPprof.Handler("mutex").ServeHTTP))
-	log.Println("Starting server on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
+
 	return r
 }
