@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/jwtauth"
@@ -27,6 +28,7 @@ type ErrorResponse struct {
 var (
 	TokenAuth = jwtauth.New("HS256", []byte("your_secret_key"), nil)
 	users     = make(map[string]User) // Хранение пользователей
+	Tokens    = make(map[string]struct{})
 )
 
 type User struct {
@@ -110,8 +112,40 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	Tokens[tokenString] = struct{}{}
+
+	// Сохраняем токены в файл
+	if err := SaveTokens(); err != nil {
+		http.Error(w, "Could not save token", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Authorization", "Bearer "+tokenString)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(TokenResponse{Token: tokenString})
 	fmt.Println(tokenString)
+}
+
+const tokenFilePath = "tokens.json"
+
+func SaveTokens() error {
+	file, err := json.MarshalIndent(Tokens, "", " ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(tokenFilePath, file, 0644)
+}
+
+// LoadTokens загружает токены из файла
+func LoadTokens() error {
+	file, err := os.ReadFile(tokenFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Если файл не существует, просто возвращаем nil
+			return nil
+		}
+		return err
+	}
+
+	return json.Unmarshal(file, &Tokens)
 }

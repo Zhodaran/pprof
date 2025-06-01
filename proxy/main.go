@@ -7,9 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	NetPprof "net/http/pprof"
-	"net/url"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -146,12 +144,6 @@ func main() {
 		},
 	}
 
-	go func() {
-		err := http.ListenAndServe(":6060", nil) // исправлено на ":6060"
-		if err != nil {
-			panic(err) // обработка ошибки
-		}
-	}()
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// 1. Проверка geoService
 		if geoService == nil {
@@ -215,18 +207,6 @@ func main() {
 	} else {
 		log.Println("Server stopped gracefully")
 	}
-}
-
-func proxyMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api") {
-			next.ServeHTTP(w, r)
-			return
-		}
-		proxyURL, _ := url.Parse("http://hugo:1313")
-		proxy := httputil.NewSingleHostReverseProxy(proxyURL)
-		proxy.ServeHTTP(w, r)
-	})
 }
 
 func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Handler {
@@ -305,24 +285,36 @@ func searchHandler(resp controller.Responder, geoService service.GeoProvider, ca
 func router(resp controller.Responder, geoService service.GeoProvider, cache *Cache) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(proxyMiddleware)
-	r.Get("/swagger/*", httpSwagger.WrapHandler)
+	r.Use(middleware.Recoverer)
+
+	// Public routes (без авторизации)
+	r.Get("/swagger/*", httpSwagger.WrapHandler) // Swagger остаётся публичным
+
+	// API routes
 	r.Post("/api/register", auth.Register)
 	r.Post("/api/login", auth.Login)
-	r.With(TokenAuthMiddleware(resp)).Post("/api/address/geocode", geocodeHandler(resp, geoService, cache))
-	r.With(TokenAuthMiddleware(resp)).Post("/api/address/search", searchHandler(resp, geoService, cache))
 
-	r.Mount("/debug/pprof/", http.HandlerFunc(NetPprof.Index))
-	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(NetPprof.Cmdline))
-	r.Handle("/debug/pprof/profile", http.HandlerFunc(NetPprof.Profile))
-	r.Handle("/debug/pprof/symbol", http.HandlerFunc(NetPprof.Symbol))
-	r.Handle("/debug/pprof/trace", http.HandlerFunc(NetPprof.Trace))
-	r.Handle("/debug/pprof/allocs", http.HandlerFunc(NetPprof.Handler("allocs").ServeHTTP))
-	r.Handle("/debug/pprof/block", http.HandlerFunc(NetPprof.Handler("block").ServeHTTP))
-	r.Handle("/debug/pprof/goroutine", http.HandlerFunc(NetPprof.Handler("goroutine").ServeHTTP))
-	r.Handle("/debug/pprof/heap", http.HandlerFunc(NetPprof.Handler("heap").ServeHTTP))
-	r.Handle("/debug/pprof/threadcreate", http.HandlerFunc(NetPprof.Handler("threadcreate").ServeHTTP))
-	r.Handle("/debug/pprof/mutex", http.HandlerFunc(NetPprof.Handler("mutex").ServeHTTP))
+	// Protected routes (требуют авторизации)
+	r.Group(func(r chi.Router) {
+		r.Use(TokenAuthMiddleware(resp))
+
+		// API endpoints
+		r.Post("/api/address/geocode", geocodeHandler(resp, geoService, cache))
+		r.Post("/api/address/search", searchHandler(resp, geoService, cache))
+
+		// Pprof endpoints
+		r.Handle("/mycustompath/pprof/*", http.HandlerFunc(NetPprof.Index))
+		r.Handle("/mycustompath/pprof/cmdline", http.HandlerFunc(NetPprof.Cmdline))
+		r.Handle("/mycustompath/pprof/profile", http.HandlerFunc(NetPprof.Profile))
+		r.Handle("/mycustompath/pprof/symbol", http.HandlerFunc(NetPprof.Symbol))
+		r.Handle("/mycustompath/pprof/trace", http.HandlerFunc(NetPprof.Trace))
+		r.Handle("/mycustompath/pprof/allocs", NetPprof.Handler("allocs"))
+		r.Handle("/mycustompath/pprof/block", NetPprof.Handler("block"))
+		r.Handle("/mycustompath/pprof/goroutine", NetPprof.Handler("goroutine"))
+		r.Handle("/mycustompath/pprof/heap", NetPprof.Handler("heap"))
+		r.Handle("/mycustompath/pprof/threadcreate", NetPprof.Handler("threadcreate"))
+		r.Handle("/mycustompath/pprof/mutex", NetPprof.Handler("mutex"))
+	})
 
 	return r
 }
