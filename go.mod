@@ -5,7 +5,6 @@ go 1.22.0
 require (
 	github.com/ekomobile/dadata/v2 v2.15.0
 	github.com/go-chi/chi v1.5.5
-	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/jwtauth v1.2.0
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.4
