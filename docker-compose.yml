@@ -4,6 +4,9 @@ services:
 
   app:
     build: . 
+    ports:
+      - "6060:6060" 
+      - "5000:8080"
     networks:
       - mylocal
 

@@ -26,6 +26,7 @@ RUN apk add --no-cache tzdata
 
 # Открываем порт 8080
 EXPOSE 8080
+EXPOSE 6060
 
 # Запускаем приложение  
 CMD ["/main"]

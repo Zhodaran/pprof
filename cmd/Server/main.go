@@ -64,6 +64,10 @@ func main() {
 	resp := controller.NewResponder(logger)
 	cache := entity.NewCache(5 * time.Minute) // Создаем кэш с TTL 5 минут
 
+	go func() {
+		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
+	}()
+
 	r := myhttp.Router(resp, geoService, cache)
 	srv := &entity.Server{
 		Server: http.Server{
