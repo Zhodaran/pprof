@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
 )
 
 func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Handler {
@@ -19,7 +20,7 @@ func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Hand
 
 			token = strings.TrimPrefix(token, "Bearer ")
 
-			_, err := controller.TokenAuth.Decode(token)
+			_, err := entity.TokenAuth.Decode(token)
 			if err != nil {
 				resp.ErrorUnauthorized(w, err)
 				return

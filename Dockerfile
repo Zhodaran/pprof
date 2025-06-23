@@ -14,7 +14,7 @@ RUN go mod download
 COPY . ./
 
 # Собираем приложение
-RUN go build -o main ./cmd/Server/main.go
+RUN go build -o main ./cmd/main.go
 
 # Начинаем новую стадию сборки на основе минимального образа
 FROM alpine:latest
@@ -22,11 +22,9 @@ FROM alpine:latest
 # Добавляем исполняемый файл из первой стадии в корневую директорию контейнера
 COPY --from=builder /app/main /main
 
-RUN apk add --no-cache tzdata
 
 # Открываем порт 8080
 EXPOSE 8080
-EXPOSE 6060
 
 # Запускаем приложение  
 CMD ["/main"]

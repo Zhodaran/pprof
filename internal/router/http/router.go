@@ -10,10 +10,10 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/service"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
 )
 
-func Router(resp controller.Responder, geoService service.GeoProvider, cache *entity.Cache) http.Handler {
+func Router(resp controller.Responder, geoService usecase.GeoProvider, cache *entity.Cache) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -22,8 +22,8 @@ func Router(resp controller.Responder, geoService service.GeoProvider, cache *en
 	r.Get("/swagger/*", httpSwagger.WrapHandler) // Swagger остаётся публичным
 
 	// API routes
-	r.Post("/api/register", controller.Register)
-	r.Post("/api/login", controller.Login)
+	r.Post("/api/register", usecase.Register)
+	r.Post("/api/login", usecase.Login)
 
 	// Protected routes (требуют авторизации)
 	r.Group(func(r chi.Router) {

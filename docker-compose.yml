@@ -1,15 +1,10 @@
 version: '3'
 
 services:
-
   app:
-    build: . 
-    ports:
-      - "6060:6060" 
-      - "5000:8080"
+    build: .
     networks:
       - mylocal
-
   swagger:
     image: swaggerapi/swagger-ui
     environment:

@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/service"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
 )
 
 type Controller struct {
-	geoService service.GeoServicer
+	geoService usecase.GeoServicer
 }
 
-func NewController(geoService service.GeoServicer) *Controller {
+func NewController(geoService usecase.GeoServicer) *Controller {
 	return &Controller{geoService: geoService}
 }
 
@@ -27,7 +28,7 @@ func NewController(geoService service.GeoServicer) *Controller {
 // @Security BearerAuth
 // @Router /api/address/search [post]
 func (c *Controller) GetGeoCoordinatesAddress(w http.ResponseWriter, r *http.Request) {
-	var req service.RequestAddressSearch
+	var req entity.RequestAddressSearch
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -60,7 +61,7 @@ func (c *Controller) GetGeoCoordinatesAddress(w http.ResponseWriter, r *http.Req
 // @Security BearerAuth
 // @Router /api/address/geocode [post]
 func (c *Controller) GetGeoCoordinatesGeocode(w http.ResponseWriter, r *http.Request) {
-	var req service.GeocodeRequest
+	var req entity.GeocodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

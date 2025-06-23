@@ -1,40 +1,16 @@
-package controller
+package usecase
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/go-chi/jwtauth"
 	"golang.org/x/crypto/bcrypt"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
 )
-
-type LoginResponse struct {
-	Message string `json:"message"`
-}
-
-type TokenResponse struct {
-	Token string `json:"token"`
-}
-
-type ErrorResponse struct {
-	BadRequest      string `json:"400"`
-	DadataBad       string `json:"500"`
-	SuccefulRequest string `json:"200"`
-}
-
-var (
-	TokenAuth = jwtauth.New("HS256", []byte("your_secret_key"), nil)
-	users     = make(map[string]User) // Хранение пользователей
-	Tokens    = make(map[string]struct{})
-)
-
-type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 // @Summary Register a new user
 // @Description This endpoint allows you to register a new user with a username and password.
@@ -48,13 +24,14 @@ type User struct {
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/register [post]
 func Register(w http.ResponseWriter, r *http.Request) {
-	var user User
+	var user entity.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		log.Printf("Error decoding JSON: %v", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	if _, exists := users[user.Username]; exists {
+	if _, exists := entity.Users[user.Username]; exists {
 		http.Error(w, "User already exists", http.StatusConflict)
 		return
 	}
@@ -65,13 +42,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users[user.Username] = User{
+	entity.Users[user.Username] = entity.User{
 		Username: user.Username,
 		Password: string(hashedPassword),
 	}
 
-	// Используем логин пользователя в качестве user_id
-
+	// Отправляем ответ о успешной регистрации
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
 }
 
 // @Summary Login a user
@@ -86,14 +64,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /api/login [post]
 func Login(w http.ResponseWriter, r *http.Request) {
-	var user User
+	var user entity.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
 	// Получаем хешированный пароль пользователя из мапы users
-	storedUser, exists := users[user.Username]
+	storedUser, exists := entity.Users[user.Username]
 	if !exists || bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password)) != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
@@ -101,18 +79,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// Если авторизация успешна, возвращаем статус 200 OK
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(LoginResponse{Message: "Login successful"})
+	json.NewEncoder(w).Encode(entity.LoginResponse{Message: "Login successful"})
 	claims := map[string]interface{}{
 		"user_id": user.Username, // Используем username как user_id
 		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	}
-	_, tokenString, err := TokenAuth.Encode(claims)
+	_, tokenString, err := entity.TokenAuth.Encode(claims)
 	if err != nil {
 		http.Error(w, "Could not create token", http.StatusInternalServerError)
 		return
 	}
 
-	Tokens[tokenString] = struct{}{}
+	entity.Tokens[tokenString] = struct{}{}
 
 	// Сохраняем токены в файл
 	if err := SaveTokens(); err != nil {
@@ -122,14 +100,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Authorization", "Bearer "+tokenString)
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(TokenResponse{Token: tokenString})
+	json.NewEncoder(w).Encode(entity.TokenResponse{Token: tokenString})
 	fmt.Println(tokenString)
 }
 
 const tokenFilePath = "tokens.json"
 
 func SaveTokens() error {
-	file, err := json.MarshalIndent(Tokens, "", " ")
+	file, err := json.MarshalIndent(entity.Tokens, "", " ")
 	if err != nil {
 		return err
 	}
@@ -147,5 +125,5 @@ func LoadTokens() error {
 		return err
 	}
 
-	return json.Unmarshal(file, &Tokens)
+	return json.Unmarshal(file, &entity.Tokens)
 }
