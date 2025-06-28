@@ -3,6 +3,8 @@ version: '3'
 services:
   app:
     build: .
+    ports:
+      - "6060:6060"
     networks:
       - mylocal
   swagger:

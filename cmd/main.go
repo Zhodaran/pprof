@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -48,7 +49,11 @@ func main() {
 			WriteTimeout: 10 * time.Second,
 		},
 	}
-
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+		log.Println("Starting pprof server on :6060")
+		http.ListenAndServe("0.0.0.0:6060", nil)
+	}()
 	// Запускаем сервер в горутине
 	go srv.Serve()
 	gracefulShutdown(srv, logger)
