@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +13,7 @@ import (
 	healthpoint "studentgit.kata.academy/Zhodaran/go-kata/internal/Healthpoint"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/pprof"
 	myhttp "studentgit.kata.academy/Zhodaran/go-kata/internal/router/http"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
 )
@@ -49,11 +49,7 @@ func main() {
 			WriteTimeout: 10 * time.Second,
 		},
 	}
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-		log.Println("Starting pprof server on :6060")
-		http.ListenAndServe("0.0.0.0:6060", nil)
-	}()
+	pprof.CreatePprof()
 	// Запускаем сервер в горутине
 	go srv.Serve()
 	gracefulShutdown(srv, logger)
