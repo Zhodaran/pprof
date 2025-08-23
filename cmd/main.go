@@ -11,11 +11,11 @@ import (
 
 	"go.uber.org/zap"
 	healthpoint "studentgit.kata.academy/Zhodaran/go-kata/internal/Healthpoint"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/adapter"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/pprof"
 	myhttp "studentgit.kata.academy/Zhodaran/go-kata/internal/router/http"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
 )
 
 // @title Address API
@@ -36,12 +36,12 @@ func main() {
 	defer logger.Sync()
 	geoService := usecase.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d")
 	resp := controller.NewResponder(logger)
-	cache := entity.NewCache(5 * time.Minute) // Создаем кэш с TTL 5 минут
+	cache := adapter.NewCache(5 * time.Minute) // Создаем кэш с TTL 5 минут
 
 	r := myhttp.Router(resp, geoService, cache)
 
 	// Создаем экземпляр entity.Server
-	srv := &entity.Server{
+	srv := &adapter.Server{
 		Server: http.Server{
 			Addr:         ":8080",
 			Handler:      r,
@@ -61,7 +61,7 @@ func main() {
 
 }
 
-func gracefulShutdown(server *entity.Server, logger *zap.Logger) {
+func gracefulShutdown(server *adapter.Server, logger *zap.Logger) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop

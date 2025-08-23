@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/entity"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
 )
 
 type Controller struct {

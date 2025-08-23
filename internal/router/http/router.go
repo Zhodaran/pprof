@@ -8,12 +8,12 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/adapter"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
 )
 
-func Router(resp controller.Responder, geoService usecase.GeoProvider, cache *entity.Cache) http.Handler {
+func Router(resp controller.Responder, geoService usecase.GeoProvider, cache *adapter.Cache) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)

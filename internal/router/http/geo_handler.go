@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/adapter"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
 )
 
 type GeocodeRequest struct {
@@ -19,7 +19,7 @@ type RequestAddressSearch struct {
 	Query string `json:"query"`
 }
 
-func geocodeHandler(resp controller.Responder, geoService usecase.GeoProvider, cache *entity.Cache) http.HandlerFunc {
+func geocodeHandler(resp controller.Responder, geoService usecase.GeoProvider, cache *adapter.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req GeocodeRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -45,7 +45,7 @@ func geocodeHandler(resp controller.Responder, geoService usecase.GeoProvider, c
 	}
 }
 
-func searchHandler(resp controller.Responder, geoService usecase.GeoProvider, cache *entity.Cache) http.HandlerFunc {
+func searchHandler(resp controller.Responder, geoService usecase.GeoProvider, cache *adapter.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RequestAddressSearch
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

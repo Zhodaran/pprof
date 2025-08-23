@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/entity"
 )
 
 // @Summary Register a new user

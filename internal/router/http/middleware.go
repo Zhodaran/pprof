@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/entity"
 )
 
 func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Handler {

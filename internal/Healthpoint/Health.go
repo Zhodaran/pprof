@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/entity"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/usecase"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/adapter"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
 )
 
-func Healthpoint(cache *entity.Cache, geoService *usecase.GeoService) {
+func Healthpoint(cache *adapter.Cache, geoService *usecase.GeoService) {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// 1. Проверка geoService
 		if geoService == nil {
@@ -52,7 +52,7 @@ func Healthpoint(cache *entity.Cache, geoService *usecase.GeoService) {
 
 // --- Конец Health Check Endpoint ---
 
-func Geopoint(srv *entity.Server) {
+func Geopoint(srv *adapter.Server) {
 	http.HandleFunc("/geocode", func(w http.ResponseWriter, r *http.Request) {
 		// Имитация работы
 		time.Sleep(100 * time.Millisecond)
