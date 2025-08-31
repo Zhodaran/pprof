@@ -10,12 +10,11 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	healthpoint "studentgit.kata.academy/Zhodaran/go-kata/internal/Healthpoint"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/adapter"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/pprof"
-	myhttp "studentgit.kata.academy/Zhodaran/go-kata/internal/router/http"
+	healthpoint "studentgit.kata.academy/Zhodaran/go-kata/adapters/Healthpoint"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/adapter"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/pprof"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/repository"
+	myhttp "studentgit.kata.academy/Zhodaran/go-kata/adapters/router/http"
 )
 
 // @title Address API
@@ -34,8 +33,8 @@ import (
 func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
-	geoService := usecase.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d")
-	resp := controller.NewResponder(logger)
+	geoService := repository.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d")
+	resp := repository.NewResponder(logger)
 	cache := adapter.NewCache(5 * time.Minute) // Создаем кэш с TTL 5 минут
 
 	r := myhttp.Router(resp, geoService, cache)

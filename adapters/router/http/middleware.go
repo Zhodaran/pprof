@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/entity"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/controller"
+	"studentgit.kata.academy/Zhodaran/go-kata/core/entity"
 )
 
 func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Handler {

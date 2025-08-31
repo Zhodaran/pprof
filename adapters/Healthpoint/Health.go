@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/adapter"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/adapter"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/repository"
 )
 
-func Healthpoint(cache *adapter.Cache, geoService *usecase.GeoService) {
+func Healthpoint(cache *adapter.Cache, geoService *repository.GeoService) {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// 1. Проверка geoService
 		if geoService == nil {

@@ -8,12 +8,12 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/adapter"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/core/usecase"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/adapter"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/controller"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/repository"
 )
 
-func Router(resp controller.Responder, geoService usecase.GeoProvider, cache *adapter.Cache) http.Handler {
+func Router(resp controller.Responder, geoService controller.GeoProvider, cache *adapter.Cache) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -22,8 +22,8 @@ func Router(resp controller.Responder, geoService usecase.GeoProvider, cache *ad
 	r.Get("/swagger/*", httpSwagger.WrapHandler) // Swagger остаётся публичным
 
 	// API routes
-	r.Post("/api/register", usecase.Register)
-	r.Post("/api/login", usecase.Login)
+	r.Post("/api/register", repository.Register)
+	r.Post("/api/login", repository.Login)
 
 	// Protected routes (требуют авторизации)
 	r.Group(func(r chi.Router) {
