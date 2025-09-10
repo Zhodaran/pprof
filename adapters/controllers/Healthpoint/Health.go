@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"studentgit.kata.academy/Zhodaran/go-kata/adapters/adapter"
-	"studentgit.kata.academy/Zhodaran/go-kata/adapters/repository"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/controllers/controller/repository"
 )
 
-func Healthpoint(cache *adapter.Cache, geoService *repository.GeoService) {
+func Healthpoint(cache *adapter.Cache, geoService *repository.GeoRepo) {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// 1. Проверка geoService
 		if geoService == nil {

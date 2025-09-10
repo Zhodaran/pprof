@@ -15,20 +15,20 @@ import (
 	"studentgit.kata.academy/Zhodaran/go-kata/core/entity"
 )
 
-func NewController(geoService GeoServicer) *Controller {
+func NewController(geoService GeoRepository) *Controller {
 	return &Controller{geoService: geoService}
 }
 
-type GeoServicer interface {
+type GeoRepository interface {
 	GetGeoCoordinatesAddress(query string) (entity.ResponseAddresses, error)
 	GetGeoCoordinatesGeocode(lat float64, lng float64) (entity.ResponseAddresses, error)
 }
 
 type Controller struct {
-	geoService GeoServicer
+	geoService GeoRepository
 }
 
-type GeoService struct {
+type GeoRepo struct {
 	api       *suggest.Api
 	apiKey    string
 	secretKey string
@@ -100,7 +100,7 @@ func (c *Controller) GetGeoCoordinatesGeocode(w http.ResponseWriter, r *http.Req
 	w.Write(jsonData)
 }
 
-func NewGeoService(apiKey, secretKey string) *GeoService {
+func NewGeoService(apiKey, secretKey string) *GeoRepo {
 	var err error
 	endpointUrl, err := url.Parse("https://suggestions.dadata.ru/suggestions/api/4_1/rs/")
 	if err != nil {
@@ -116,7 +116,7 @@ func NewGeoService(apiKey, secretKey string) *GeoService {
 		Client: client.NewClient(endpointUrl, client.WithCredentialProvider(&creds)),
 	}
 
-	return &GeoService{
+	return &GeoRepo{
 		api:       &api,
 		apiKey:    apiKey,
 		secretKey: secretKey,
@@ -135,7 +135,7 @@ func NewGeoService(apiKey, secretKey string) *GeoService {
 // @Failure 500 {object} string "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/address/search [post]
-func (g *GeoService) GetGeoCoordinatesAddress(query string) (entity.ResponseAddresses, error) {
+func (g *GeoRepo) GetGeoCoordinatesAddress(query string) (entity.ResponseAddresses, error) {
 	url := "http://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address"
 	reqData := map[string]string{"query": query}
 
@@ -194,7 +194,7 @@ func (g *GeoService) GetGeoCoordinatesAddress(query string) (entity.ResponseAddr
 // @Failure 500 {object} string "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/address/geocode [post]
-func (g *GeoService) GetGeoCoordinatesGeocode(lat float64, lng float64) (entity.ResponseAddresses, error) {
+func (g *GeoRepo) GetGeoCoordinatesGeocode(lat float64, lng float64) (entity.ResponseAddresses, error) {
 	url := "http://suggestions.dadata.ru/suggestions/api/4_1/rs/geolocate/address"
 	data := map[string]float64{"lat": lat, "lon": lng}
 
@@ -242,7 +242,7 @@ func (g *GeoService) GetGeoCoordinatesGeocode(lat float64, lng float64) (entity.
 	return addresses, nil
 }
 
-func (g *GeoService) AddressSearch(input string) ([]*entity.Address, error) {
+func (g *GeoRepo) AddressSearch(input string) ([]*entity.Address, error) {
 	var res []*entity.Address
 	rawRes, err := g.api.Address(context.Background(), &suggest.RequestParams{Query: input})
 	if err != nil {
@@ -259,7 +259,7 @@ func (g *GeoService) AddressSearch(input string) ([]*entity.Address, error) {
 	return res, nil
 }
 
-func (g *GeoService) GeoCode(lat, lng string) ([]*entity.Address, error) {
+func (g *GeoRepo) GeoCode(lat, lng string) ([]*entity.Address, error) {
 	httpClient := &http.Client{}
 	var data = strings.NewReader(fmt.Sprintf(`{"lat": %s, "lon": %s}`, lat, lng))
 	req, err := http.NewRequest("POST", "https://suggestions.dadata.ru/suggestions/api/4_1/rs/geolocate/address", data)

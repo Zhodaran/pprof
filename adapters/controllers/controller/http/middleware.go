@@ -5,11 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"studentgit.kata.academy/Zhodaran/go-kata/adapters/controller"
 	"studentgit.kata.academy/Zhodaran/go-kata/core/entity"
 )
 
-func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Handler {
+func TokenAuthMiddleware(resp entity.Responder) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get("Authorization")

@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	healthpoint "studentgit.kata.academy/Zhodaran/go-kata/adapters/Healthpoint"
 	"studentgit.kata.academy/Zhodaran/go-kata/adapters/adapter"
+	healthpoint "studentgit.kata.academy/Zhodaran/go-kata/adapters/controllers/Healthpoint"
+	myhttp "studentgit.kata.academy/Zhodaran/go-kata/adapters/controllers/controller/http"
+	"studentgit.kata.academy/Zhodaran/go-kata/adapters/controllers/controller/repository"
 	"studentgit.kata.academy/Zhodaran/go-kata/adapters/pprof"
-	"studentgit.kata.academy/Zhodaran/go-kata/adapters/repository"
-	myhttp "studentgit.kata.academy/Zhodaran/go-kata/adapters/router/http"
 )
 
 // @title Address API

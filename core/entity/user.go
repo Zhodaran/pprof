@@ -1,8 +1,18 @@
 package entity
 
 import (
+	"net/http"
+
 	"github.com/go-chi/jwtauth"
 )
+
+type Responder interface {
+	OutputJSON(w http.ResponseWriter, responseData interface{})
+	ErrorUnauthorized(w http.ResponseWriter, err error)
+	ErrorBadRequest(w http.ResponseWriter, err error)
+	ErrorForbidden(w http.ResponseWriter, err error)
+	ErrorInternal(w http.ResponseWriter, err error)
+}
 
 type LoginResponse struct {
 	Message string `json:"message"`

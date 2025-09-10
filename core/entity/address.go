@@ -2,6 +2,24 @@ package entity
 
 import "encoding/json"
 
+type GeoProvider interface {
+	AddressSearch(input string) ([]*Address, error)
+	GeoCode(lat, lng string) ([]*Address, error)
+	GetGeoCoordinatesAddress(query string) (ResponseAddresses, error)
+	GetGeoCoordinatesGeocode(lat float64, lng float64) (ResponseAddresses, error)
+}
+
+type Response struct {
+	Success bool        `json:"success"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+type GeocodeRequest struct {
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"lng"`
+}
+
 type Address struct {
 	City   string `json:"city"`
 	Street string `json:"street"`
@@ -22,11 +40,6 @@ type ErrorResponse struct {
 
 type RequestAddressSearch struct {
 	Query string `json:"query"`
-}
-
-type GeocodeRequest struct {
-	Lat float64 `json:"lat"`
-	Lng float64 `json:"lng"`
 }
 
 type ResponseAddresses struct {

@@ -10,6 +10,8 @@ import (
 	"studentgit.kata.academy/Zhodaran/go-kata/core/entity"
 )
 
+const tokenFilePath = "tokens.json"
+
 // @Summary Register a new user
 // @Description This endpoint allows you to register a new user with a username and password.
 // @Tags users
@@ -32,7 +34,6 @@ func Register(user *entity.User) error {
 	}
 	return nil
 	// Отправляем ответ о успешной регистрации
-
 }
 
 // @Summary Login a user
@@ -74,16 +75,6 @@ func Login(user *entity.User) (string, error) {
 	return tokenString, nil // Возвращаем токен
 }
 
-const tokenFilePath = "tokens.json"
-
-func SaveTokens() error {
-	file, err := json.MarshalIndent(entity.Tokens, "", " ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(tokenFilePath, file, 0644)
-}
-
 // LoadTokens загружает токены из файла
 func LoadTokens() error {
 	file, err := os.ReadFile(tokenFilePath)
@@ -96,4 +87,12 @@ func LoadTokens() error {
 	}
 
 	return json.Unmarshal(file, &entity.Tokens)
+}
+
+func SaveTokens() error {
+	file, err := json.MarshalIndent(entity.Tokens, "", " ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(tokenFilePath, file, 0644)
 }

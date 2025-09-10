@@ -7,10 +7,10 @@ import (
 	"net/http"
 
 	"go.uber.org/zap"
-	"studentgit.kata.academy/Zhodaran/go-kata/adapters/controller"
+	"studentgit.kata.academy/Zhodaran/go-kata/core/entity"
 )
 
-func NewResponder(logger *zap.Logger) controller.Responder {
+func NewResponder(logger *zap.Logger) entity.Responder {
 	return &Respond{log: logger}
 }
 
@@ -29,7 +29,7 @@ func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 	r.log.Info("http response bad request status code", zap.Error(err))
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(http.StatusBadRequest)
-	if err := json.NewEncoder(w).Encode(controller.Response{
+	if err := json.NewEncoder(w).Encode(entity.Response{
 		Success: false,
 		Message: err.Error(),
 		Data:    nil,
@@ -42,7 +42,7 @@ func (r *Respond) ErrorForbidden(w http.ResponseWriter, err error) {
 	r.log.Warn("http resposne forbidden", zap.Error(err))
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(http.StatusForbidden)
-	if err := json.NewEncoder(w).Encode(controller.Response{
+	if err := json.NewEncoder(w).Encode(entity.Response{
 		Success: false,
 		Message: err.Error(),
 		Data:    nil,
@@ -55,7 +55,7 @@ func (r *Respond) ErrorUnauthorized(w http.ResponseWriter, err error) {
 	r.log.Warn("http resposne Unauthorized", zap.Error(err))
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(http.StatusUnauthorized)
-	if err := json.NewEncoder(w).Encode(controller.Response{
+	if err := json.NewEncoder(w).Encode(entity.Response{
 		Success: false,
 		Message: err.Error(),
 		Data:    nil,
@@ -71,7 +71,7 @@ func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) {
 	r.log.Error("http response internal error", zap.Error(err))
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(http.StatusInternalServerError)
-	if err := json.NewEncoder(w).Encode(controller.Response{
+	if err := json.NewEncoder(w).Encode(entity.Response{
 		Success: false,
 		Message: err.Error(),
 		Data:    nil,
